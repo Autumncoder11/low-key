@@ -147,7 +147,8 @@
 <div id="lock">
   <div class="box">
     <h1>SUNRISE VALLEY — ADMIN</h1>
-    <p>Staff-only. Enter the admin password to continue.</p>
+    <p>Staff-only. Enter your username and password to continue.</p>
+    <input id="lockUser" type="text" placeholder="Username" autocomplete="off" style="margin-bottom:10px;">
     <input id="lockPass" type="password" placeholder="Password" autocomplete="off">
     <button onclick="tryUnlock()">Unlock</button>
     <div id="lockErr"></div>
@@ -164,7 +165,10 @@
       <div class="title">Sunrise Valley — Admin Console</div>
       <div class="sub">Plot status, corner/facing, and landmark pins — saved straight to GitHub</div>
     </div>
-    <div class="status" id="repoStatus">Not connected — open <b>Settings</b> below</div>
+    <div class="status">
+      <div id="whoAmI" style="margin-bottom:4px;"></div>
+      <div id="repoStatus">Not connected — open <b>Settings</b> below</div>
+    </div>
   </header>
 
   <nav class="tabs">
@@ -203,12 +207,13 @@
       </div>
 
       <div class="card">
-        <h2>Change admin password</h2>
-        <p class="hint">This only gates this page in <b>this specific browser</b> — it's a light deterrent, not
-          real security (the GitHub token above is the actual permission check). The new password is stored only
-          on this device; it isn't sent anywhere, so no one else — including whoever built this page — can see
-          or recover it. If it's ever forgotten on a device, the only way back in is clearing that browser's
-          saved site data for this page, which resets it to the original default password.</p>
+        <h2>Change password</h2>
+        <p class="hint">Changes the password for whichever username you're currently signed in as — it only
+          gates this page in <b>this specific browser</b>, it's a light deterrent, not real security (the GitHub
+          token above is the actual permission check). The new password is stored only on this device; it isn't
+          sent anywhere, so no one else — including whoever built this page — can see or recover it. If it's
+          ever forgotten on a device, use the "Forgot password?" link on the login screen to reset just that
+          username back to its original default password.</p>
         <div class="row">
           <div><label class="f">Current password</label><input id="pwCurrent" type="password"></div>
         </div>
@@ -371,13 +376,36 @@
        .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
    then paste the printed hex string below.
    ========================================================================= */
-var ADMIN_PASSWORD_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // "admin123" placeholder — CHANGE THIS
+/* =========================================================================
+   ADMIN ACCOUNTS
+   Passwords are stored as SHA-256 hashes, not plaintext, so a casual
+   "view source" does not reveal them directly — this is a light deterrent
+   for staff/visitors, NOT real security. The actual permission check is
+   the GitHub token entered in Settings: without a valid token scoped to
+   the repo, nothing can be saved even if someone gets past this screen.
+
+   One entry = one named login. To add another person, duplicate a line
+   with their username and a fresh password hash. To get a hash: open a
+   browser console anywhere and run
+     crypto.subtle.digest('SHA-256', new TextEncoder().encode('theirPassword'))
+       .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+   and paste the printed hex string in as passwordHash.
+   ========================================================================= */
+var ADMIN_ACCOUNTS = [
+  { username: "admin", passwordHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9" } // "admin123" placeholder — CHANGE THIS
+];
+
+function findAccount(username){
+  var u = (username || '').trim().toLowerCase();
+  return ADMIN_ACCOUNTS.find(function(a){ return a.username.toLowerCase() === u; }) || null;
+}
 
 // A password changed from inside the app (Settings → Change admin password)
-// overrides the hardcoded default above, but only in the browser it was
-// set in — it's stored in localStorage on that device only.
-function currentPasswordHash(){
-  return localStorage.getItem('admin_pw_hash') || ADMIN_PASSWORD_HASH;
+// overrides that account's hardcoded default above, but only in the
+// browser it was set in — it's stored in localStorage on that device only,
+// keyed by username so each person's override is independent.
+function currentPasswordHash(account){
+  return localStorage.getItem('admin_pw_hash_' + account.username.toLowerCase()) || account.passwordHash;
 }
 
 async function sha256Hex(text){
@@ -386,10 +414,17 @@ async function sha256Hex(text){
 }
 
 async function tryUnlock(){
+  var username = document.getElementById('lockUser').value;
   var val = document.getElementById('lockPass').value;
+  var account = findAccount(username);
+  if (!account) {
+    document.getElementById('lockErr').textContent = 'Unknown username.';
+    return;
+  }
   var hash = await sha256Hex(val);
-  if (hash === currentPasswordHash()) {
+  if (hash === currentPasswordHash(account)) {
     sessionStorage.setItem('admin_unlocked', '1');
+    sessionStorage.setItem('admin_username', account.username);
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     initApp();
@@ -398,26 +433,35 @@ async function tryUnlock(){
   }
 }
 document.getElementById('lockPass').addEventListener('keydown', function(e){ if (e.key === 'Enter') tryUnlock(); });
+document.getElementById('lockUser').addEventListener('keydown', function(e){ if (e.key === 'Enter') document.getElementById('lockPass').focus(); });
 
 function resetPassword(){
-  var hasOverride = !!localStorage.getItem('admin_pw_hash');
-  if (!hasOverride) {
-    alert('This device is already using the original default password.');
+  var username = document.getElementById('lockUser').value;
+  var account = findAccount(username);
+  if (!account) {
+    alert('Type the username first, then click this again.');
     return;
   }
-  if (!confirm('Reset the password on this device back to the original default? Your saved GitHub connection (owner/repo/token) will NOT be affected.')) return;
-  localStorage.removeItem('admin_pw_hash');
+  var key = 'admin_pw_hash_' + account.username.toLowerCase();
+  if (!localStorage.getItem(key)) {
+    alert('This device is already using the original default password for "' + account.username + '".');
+    return;
+  }
+  if (!confirm('Reset the password for "' + account.username + '" on this device back to the original default? Your saved GitHub connection (owner/repo/token) will NOT be affected.')) return;
+  localStorage.removeItem(key);
   document.getElementById('lockPass').value = '';
   document.getElementById('lockErr').textContent = '';
   alert('Password reset on this device. Log in with the original default password.');
 }
 
 async function changePassword(){
+  var account = findAccount(sessionStorage.getItem('admin_username'));
+  if (!account){ notify('pwNotice', 'err', 'Could not tell which account is logged in — please log out and back in.'); return; }
   var current = document.getElementById('pwCurrent').value;
   var next = document.getElementById('pwNew').value;
   var confirm = document.getElementById('pwConfirm').value;
   var currentHash = await sha256Hex(current);
-  if (currentHash !== currentPasswordHash()){
+  if (currentHash !== currentPasswordHash(account)){
     notify('pwNotice', 'err', 'Current password is wrong.');
     return;
   }
@@ -430,7 +474,7 @@ async function changePassword(){
     return;
   }
   var newHash = await sha256Hex(next);
-  localStorage.setItem('admin_pw_hash', newHash);
+  localStorage.setItem('admin_pw_hash_' + account.username.toLowerCase(), newHash);
   document.getElementById('pwCurrent').value = '';
   document.getElementById('pwNew').value = '';
   document.getElementById('pwConfirm').value = '';
@@ -458,6 +502,8 @@ function showTab(name){
 var CFG = {};
 
 function initApp(){
+  var whoEl = document.getElementById('whoAmI');
+  if (whoEl) whoEl.textContent = 'Signed in as ' + (sessionStorage.getItem('admin_username') || '—');
   var saved = localStorage.getItem('admin_gh_cfg');
   if (saved) {
     try { CFG = JSON.parse(saved); } catch(e){ CFG = {}; }
