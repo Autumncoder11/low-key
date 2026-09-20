@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Parcelaa Urbanaa — Admin</title>
+<title>Sunrise Valley — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -146,11 +146,14 @@
 <!-- ================= LOCK SCREEN ================= -->
 <div id="lock">
   <div class="box">
-    <h1>PARCELAA URBANAA — ADMIN</h1>
+    <h1>SUNRISE VALLEY — ADMIN</h1>
     <p>Staff-only. Enter the admin password to continue.</p>
     <input id="lockPass" type="password" placeholder="Password" autocomplete="off">
     <button onclick="tryUnlock()">Unlock</button>
     <div id="lockErr"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <a href="#" onclick="resetPassword();return false;" style="color:#8FA9B8;font-size:11.5px;text-decoration:underline;">Forgot password? Reset to default</a>
+    </div>
   </div>
 </div>
 
@@ -158,7 +161,7 @@
 <div id="app">
   <header class="top">
     <div>
-      <div class="title">Parcelaa Urbanaa — Admin Console</div>
+      <div class="title">Sunrise Valley — Admin Console</div>
       <div class="sub">Plot status, corner/facing, and landmark pins — saved straight to GitHub</div>
     </div>
     <div class="status" id="repoStatus">Not connected — open <b>Settings</b> below</div>
@@ -201,10 +204,22 @@
 
       <div class="card">
         <h2>Change admin password</h2>
-        <p class="hint">This password only gates this page in this browser — it is not real security by itself
-          (anyone with the file could view its source). The GitHub token above is the actual permission check.
-          Change the password by editing the ADMIN_PASSWORD_HASH line near the top of this file's script, or ask
-          me to set a new one and regenerate the file.</p>
+        <p class="hint">This only gates this page in <b>this specific browser</b> — it's a light deterrent, not
+          real security (the GitHub token above is the actual permission check). The new password is stored only
+          on this device; it isn't sent anywhere, so no one else — including whoever built this page — can see
+          or recover it. If it's ever forgotten on a device, the only way back in is clearing that browser's
+          saved site data for this page, which resets it to the original default password.</p>
+        <div class="row">
+          <div><label class="f">Current password</label><input id="pwCurrent" type="password"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">New password</label><input id="pwNew" type="password"></div>
+          <div><label class="f">Confirm new password</label><input id="pwConfirm" type="password"></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" onclick="changePassword()">Change password</button>
+        </div>
+        <div id="pwNotice"></div>
       </div>
     </div>
 
@@ -358,6 +373,13 @@
    ========================================================================= */
 var ADMIN_PASSWORD_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // "admin123" placeholder — CHANGE THIS
 
+// A password changed from inside the app (Settings → Change admin password)
+// overrides the hardcoded default above, but only in the browser it was
+// set in — it's stored in localStorage on that device only.
+function currentPasswordHash(){
+  return localStorage.getItem('admin_pw_hash') || ADMIN_PASSWORD_HASH;
+}
+
 async function sha256Hex(text){
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
@@ -366,7 +388,7 @@ async function sha256Hex(text){
 async function tryUnlock(){
   var val = document.getElementById('lockPass').value;
   var hash = await sha256Hex(val);
-  if (hash === ADMIN_PASSWORD_HASH) {
+  if (hash === currentPasswordHash()) {
     sessionStorage.setItem('admin_unlocked', '1');
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'block';
@@ -376,6 +398,44 @@ async function tryUnlock(){
   }
 }
 document.getElementById('lockPass').addEventListener('keydown', function(e){ if (e.key === 'Enter') tryUnlock(); });
+
+function resetPassword(){
+  var hasOverride = !!localStorage.getItem('admin_pw_hash');
+  if (!hasOverride) {
+    alert('This device is already using the original default password.');
+    return;
+  }
+  if (!confirm('Reset the password on this device back to the original default? Your saved GitHub connection (owner/repo/token) will NOT be affected.')) return;
+  localStorage.removeItem('admin_pw_hash');
+  document.getElementById('lockPass').value = '';
+  document.getElementById('lockErr').textContent = '';
+  alert('Password reset on this device. Log in with the original default password.');
+}
+
+async function changePassword(){
+  var current = document.getElementById('pwCurrent').value;
+  var next = document.getElementById('pwNew').value;
+  var confirm = document.getElementById('pwConfirm').value;
+  var currentHash = await sha256Hex(current);
+  if (currentHash !== currentPasswordHash()){
+    notify('pwNotice', 'err', 'Current password is wrong.');
+    return;
+  }
+  if (!next || next.length < 6){
+    notify('pwNotice', 'err', 'New password should be at least 6 characters.');
+    return;
+  }
+  if (next !== confirm){
+    notify('pwNotice', 'err', "New password and confirmation don't match.");
+    return;
+  }
+  var newHash = await sha256Hex(next);
+  localStorage.setItem('admin_pw_hash', newHash);
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  notify('pwNotice', 'ok', 'Password changed for this browser. Use the new one next time you unlock here.');
+}
 
 if (sessionStorage.getItem('admin_unlocked') === '1') {
   document.getElementById('lock').style.display = 'none';
