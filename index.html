@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parcelaa Urbanaa — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2436;
+    --navy2:#123049;
+    --line:#2B4A63;
+    --paper:#F3F6F4;
+    --ink:#122A38;
+    --muted:#5C7889;
+    --amber:#C8811E;
+    --amber-dim:#C8811E33;
+    --good:#2F7D57;
+    --bad:#B4432E;
+    --hold:#B08A1A;
+    --radius:3px;
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Lock screen ---------- */
+  #lock{
+    position:fixed;inset:0;background:var(--navy);color:#EAF1F5;
+    display:flex;align-items:center;justify-content:center;z-index:500;
+  }
+  #lock .box{width:320px;padding:32px;border:1px solid var(--line);border-radius:var(--radius);}
+  #lock h1{font-size:15px;letter-spacing:.02em;margin:0 0 4px;font-weight:600;}
+  #lock p{color:#9FB6C4;font-size:12.5px;margin:0 0 20px;line-height:1.5;}
+  #lock input{
+    width:100%;padding:10px 12px;background:var(--navy2);border:1px solid var(--line);
+    color:#EAF1F5;border-radius:var(--radius);font-size:14px;margin-bottom:10px;
+  }
+  #lock button{
+    width:100%;padding:10px;background:var(--amber);border:none;color:#1B1200;
+    font-weight:600;border-radius:var(--radius);cursor:pointer;font-size:13.5px;
+  }
+  #lock button:hover{filter:brightness(1.08);}
+  #lockErr{color:#E8987A;font-size:12px;min-height:16px;margin-top:2px;}
+
+  /* ---------- Shell ---------- */
+  #app{display:none;}
+  header.top{
+    background:var(--navy);color:#EAF1F5;padding:14px 22px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px solid var(--amber);
+  }
+  header.top .title{font-size:14.5px;font-weight:600;letter-spacing:.01em;}
+  header.top .sub{color:#8FA9B8;font-size:11.5px;margin-top:2px;}
+  header.top .status{font-size:11.5px;color:#9FB6C4;}
+  header.top .status b{color:#E9BE7A;}
+
+  nav.tabs{
+    display:flex;gap:2px;background:var(--navy2);padding:0 22px;
+  }
+  nav.tabs button{
+    padding:11px 16px;background:transparent;border:none;color:#9FB6C4;
+    font-size:12.5px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;
+  }
+  nav.tabs button.active{color:#fff;border-bottom-color:var(--amber);}
+
+  main{padding:22px;max-width:1180px;margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{
+    background:#fff;border:1px solid #DCE3DE;border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:16px;
+  }
+  .card h2{font-size:13px;margin:0 0 3px;font-weight:600;}
+  .card .hint{color:var(--muted);font-size:11.5px;margin:0 0 14px;line-height:1.5;}
+
+  label.f{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .row > div{flex:1;min-width:150px;}
+  input[type=text], input[type=number], input[type=password], select, textarea{
+    width:100%;padding:8px 10px;border:1px solid #CBD5CF;border-radius:var(--radius);
+    font-size:13px;background:#fff;color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--amber-dim);border-color:var(--amber);}
+
+  button.btn{
+    padding:8px 14px;border-radius:var(--radius);border:1px solid #CBD5CF;
+    background:#fff;color:var(--ink);font-size:12.5px;font-weight:500;cursor:pointer;
+  }
+  button.btn:hover{background:#F1F4F1;}
+  button.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;}
+  button.btn.primary:hover{background:var(--navy2);}
+  button.btn.amber{background:var(--amber);border-color:var(--amber);color:#20140a;}
+  button.btn.danger{color:var(--bad);border-color:#E7C4BA;}
+  button.btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+
+  .split{display:flex;gap:18px;align-items:flex-start;}
+  .split > .list-col{width:300px;flex-shrink:0;}
+  .split > .edit-col{flex:1;min-width:0;}
+
+  input.search{margin-bottom:8px;}
+  .plotlist{border:1px solid #DCE3DE;border-radius:var(--radius);max-height:520px;overflow:auto;}
+  .plotlist .row-item{
+    padding:8px 10px;border-bottom:1px solid #EDEFEC;cursor:pointer;font-size:12.5px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .plotlist .row-item:hover{background:#F5F7F4;}
+  .plotlist .row-item.sel{background:var(--amber-dim);}
+  .plotlist .row-item .k{color:var(--muted);font-size:10.5px;}
+  .tag{font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:10px;letter-spacing:.02em;}
+  .tag.sold{background:#F6DCD4;color:var(--bad);}
+  .tag.available{background:#DCEEE2;color:var(--good);}
+  .tag.hold{background:#F3E7C4;color:var(--hold);}
+  .tag.dirty{background:#DCE7F2;color:#2B5A85;margin-left:6px;}
+
+  .sidegrid{display:grid;grid-template-columns:56px 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;}
+  .sidegrid .hd{font-size:10px;color:var(--muted);font-weight:600;}
+  .sidegrid input{padding:6px 8px;font-size:12px;}
+  .sidegrid .coord{font-size:10.5px;color:#9AA8A0;}
+
+  .notice{font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:12px;}
+  .notice.ok{background:#DCEEE2;color:var(--good);}
+  .notice.err{background:#F6DCD4;color:var(--bad);}
+  .notice.info{background:#E7EEF2;color:#2B5A85;}
+
+  details.settings summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--navy);padding:4px 0;}
+  code.snippet{
+    display:block;white-space:pre-wrap;background:var(--navy);color:#CFE3ED;
+    padding:12px;border-radius:var(--radius);font-size:11.5px;line-height:1.6;margin-top:8px;
+  }
+
+  .lm-item{border:1px solid #DCE3DE;border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;font-size:12.5px;}
+  .lm-item .lm-top{display:flex;justify-content:space-between;gap:10px;}
+  .lm-item .lm-slug{color:var(--muted);font-size:10.5px;}
+  .lm-item .lm-meta{color:var(--muted);margin-top:3px;font-size:11px;}
+  .lm-item .lm-actions{display:flex;gap:6px;margin-top:8px;}
+  .lm-item .lm-actions button{font-size:11px;padding:4px 8px;}
+</style>
+</head>
+<body>
+
+<!-- ================= LOCK SCREEN ================= -->
+<div id="lock">
+  <div class="box">
+    <h1>PARCELAA URBANAA — ADMIN</h1>
+    <p>Staff-only. Enter the admin password to continue.</p>
+    <input id="lockPass" type="password" placeholder="Password" autocomplete="off">
+    <button onclick="tryUnlock()">Unlock</button>
+    <div id="lockErr"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <header class="top">
+    <div>
+      <div class="title">Parcelaa Urbanaa — Admin Console</div>
+      <div class="sub">Plot status, corner/facing, and landmark pins — saved straight to GitHub</div>
+    </div>
+    <div class="status" id="repoStatus">Not connected — open <b>Settings</b> below</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="plots" onclick="showTab('plots')">Plots</button>
+    <button data-tab="landmarks" onclick="showTab('landmarks')">Landmarks</button>
+    <button data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <main>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="panel active" id="panel-settings">
+      <div class="card">
+        <h2>GitHub connection</h2>
+        <p class="hint">This is what actually lets Save write into your live files. Use a Fine-grained Personal
+          Access Token scoped to just this one repository, with Contents: Read and write permission — never a
+          token with broader access. The token stays in this browser's local storage only; it is sent to
+          api.github.com and nowhere else.</p>
+        <div class="row">
+          <div><label class="f">Repo owner</label><input id="cfgOwner" type="text" placeholder="e.g. balaji-realty"></div>
+          <div><label class="f">Repo name</label><input id="cfgRepo" type="text" placeholder="e.g. parcelaa-urbanaa-site"></div>
+          <div><label class="f">Branch</label><input id="cfgBranch" type="text" placeholder="main" value="main"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">Path to plots JSON</label><input id="cfgPlotsPath" type="text" placeholder="all_plots_matched.json"></div>
+          <div><label class="f">Path to landmarks XML</label><input id="cfgXmlPath" type="text" placeholder="gui_fov_kumaran.xml"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">GitHub token</label><input id="cfgToken" type="password" placeholder="github_pat_..."></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" onclick="saveSettings()">Save connection</button>
+          <button class="btn danger" onclick="clearSettings()">Clear saved token</button>
+        </div>
+        <div id="settingsNotice"></div>
+      </div>
+
+      <div class="card">
+        <h2>Change admin password</h2>
+        <p class="hint">This password only gates this page in this browser — it is not real security by itself
+          (anyone with the file could view its source). The GitHub token above is the actual permission check.
+          Change the password by editing the ADMIN_PASSWORD_HASH line near the top of this file's script, or ask
+          me to set a new one and regenerate the file.</p>
+      </div>
+    </div>
+
+    <!-- ============ PLOTS ============ -->
+    <div class="panel" id="panel-plots">
+      <div class="card">
+        <div class="btnrow" style="margin-top:0;">
+          <button class="btn primary" onclick="loadPlots()">Load plots from GitHub</button>
+          <button class="btn" onclick="newPlot()">+ Add new plot</button>
+          <span id="plotsLoadedInfo" class="hint" style="align-self:center;margin:0;"></span>
+        </div>
+        <div id="plotsNotice"></div>
+      </div>
+
+      <div class="card split">
+        <div class="list-col">
+          <input class="search" type="text" id="plotSearch" placeholder="Search by plot # or name…" oninput="renderPlotList()">
+          <div class="plotlist" id="plotList"><div style="padding:14px;color:var(--muted);font-size:12px;">Load plots to see the list.</div></div>
+        </div>
+
+        <div class="edit-col">
+          <div id="plotEmptyState" style="color:var(--muted);font-size:12.5px;padding:30px 0;">Select a plot on the left, or add a new one.</div>
+
+          <div id="plotForm" style="display:none;">
+            <div class="row">
+              <div>
+                <label class="f">Hotspot key</label>
+                <input id="pfKey" type="text" class="mono" placeholder="kml_poly_12">
+              </div>
+              <div>
+                <label class="f">Display name</label>
+                <input id="pfName" type="text" placeholder="Plot 12">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label class="f">Status</label>
+                <select id="pfStatus">
+                  <option value="AVAILABLE">Available</option>
+                  <option value="SOLD">Sold</option>
+                  <option value="HOLD">On hold</option>
+                </select>
+              </div>
+              <div>
+                <label class="f">Category / corner</label>
+                <select id="pfCategory">
+                  <option value="TBD">Standard (no border color)</option>
+                  <option value="CORNER">Corner plot</option>
+                  <option value="EB">EB — road buffer</option>
+                  <option value="LB">LB — road buffer</option>
+                  <option value="PARK">Park</option>
+                </select>
+              </div>
+              <div>
+                <label class="f">Facing</label>
+                <select id="pfFacing">
+                  <option value="">— not set —</option>
+                  <option>North</option><option>North East</option><option>East</option>
+                  <option>South East</option><option>South</option><option>South West</option>
+                  <option>West</option><option>North West</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label class="f">Area (leave blank to auto-estimate from sides)</label>
+                <input id="pfArea" type="text" placeholder="e.g. 2,400 sq ft">
+              </div>
+            </div>
+
+            <label class="f" style="margin-top:6px;">Side dimensions</label>
+            <div class="sidegrid" style="margin-top:4px;">
+              <div class="hd">Side</div><div class="hd">Length</div><div class="hd"></div><div class="hd"></div>
+            </div>
+            <div id="pfSides"></div>
+            <button class="btn" style="font-size:11.5px;padding:5px 10px;" onclick="addSideRow()">+ Add side</button>
+
+            <div class="btnrow">
+              <button class="btn amber" onclick="savePlotToGithub()">Save to GitHub</button>
+              <button class="btn danger" onclick="deletePlot()">Delete this plot's data</button>
+            </div>
+            <div id="plotSaveNotice"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LANDMARKS ============ -->
+    <div class="panel" id="panel-landmarks">
+      <div class="card">
+        <div class="btnrow" style="margin-top:0;">
+          <button class="btn primary" onclick="loadLandmarks()">Load landmarks from GitHub</button>
+          <span id="lmLoadedInfo" class="hint" style="align-self:center;margin:0;"></span>
+        </div>
+        <div id="lmNotice"></div>
+      </div>
+
+      <div class="card">
+        <details class="settings">
+          <summary>How to get ath / atv for a new landmark pin</summary>
+          <p class="hint" style="margin-top:8px;">Open your <b>live</b> tour page (not this admin page), open the
+            browser console (F12), paste the snippet below, press Enter, then click the spot on the panorama
+            you want to pin. It will pop up the ath/atv for that exact point — copy those two numbers into the
+            form below.</p>
+          <code class="snippet" id="pickerSnippet"></code>
+          <button class="btn" style="margin-top:8px;font-size:11.5px;padding:5px 10px;" onclick="copyPicker()">Copy snippet</button>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Add a landmark</h2>
+        <div class="row">
+          <div><label class="f">Label (shown to visitors)</label><input id="lmLabel" type="text" placeholder="e.g. City Hospital"></div>
+          <div><label class="f">Time / distance flag</label><input id="lmTime" type="text" placeholder="e.g. 6 mins"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">ath (paste the picker's output here — the number gets pulled out automatically)</label><input id="lmAth" type="text" placeholder="-9.56583" oninput="autoExtractAth(this)"></div>
+          <div><label class="f">height (line length, px — 40 is typical)</label><input id="lmHeight" type="number" value="40"></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn amber" onclick="addLandmark()">Add to list</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Current landmarks</h2>
+        <p class="hint">Edits here stay local until you press "Save all to GitHub" below.</p>
+        <div id="lmList"><div style="color:var(--muted);font-size:12px;">Load landmarks to see the list.</div></div>
+        <div class="btnrow">
+          <button class="btn amber" onclick="saveLandmarksToGithub()">Save all to GitHub</button>
+        </div>
+        <div id="lmSaveNotice"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   ADMIN PASSWORD
+   Stored as a SHA-256 hash, not plaintext, so a casual "view source" does
+   not reveal it directly — this is a light deterrent for staff/visitors,
+   NOT real security. The actual permission check is the GitHub token
+   entered in Settings: without a valid token scoped to the repo, nothing
+   can be saved even if someone gets past this screen.
+   To change the password: open a browser console anywhere and run
+     crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPassword'))
+       .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+   then paste the printed hex string below.
+   ========================================================================= */
+var ADMIN_PASSWORD_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // "admin123" placeholder — CHANGE THIS
+
+async function sha256Hex(text){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+async function tryUnlock(){
+  var val = document.getElementById('lockPass').value;
+  var hash = await sha256Hex(val);
+  if (hash === ADMIN_PASSWORD_HASH) {
+    sessionStorage.setItem('admin_unlocked', '1');
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('lockErr').textContent = 'Wrong password.';
+  }
+}
+document.getElementById('lockPass').addEventListener('keydown', function(e){ if (e.key === 'Enter') tryUnlock(); });
+
+if (sessionStorage.getItem('admin_unlocked') === '1') {
+  document.getElementById('lock').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  window.addEventListener('DOMContentLoaded', initApp);
+}
+
+/* =========================================================================
+   TABS
+   ========================================================================= */
+function showTab(name){
+  document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+/* =========================================================================
+   SETTINGS  (GitHub connection, stored in localStorage on this device only)
+   ========================================================================= */
+var CFG = {};
+
+function initApp(){
+  var saved = localStorage.getItem('admin_gh_cfg');
+  if (saved) {
+    try { CFG = JSON.parse(saved); } catch(e){ CFG = {}; }
+  }
+  document.getElementById('cfgOwner').value = CFG.owner || '';
+  document.getElementById('cfgRepo').value = CFG.repo || '';
+  document.getElementById('cfgBranch').value = CFG.branch || 'main';
+  document.getElementById('cfgPlotsPath').value = CFG.plotsPath || 'all_plots_matched.json';
+  document.getElementById('cfgXmlPath').value = CFG.xmlPath || 'gui_fov_kumaran.xml';
+  document.getElementById('cfgToken').value = CFG.token || '';
+  updateRepoStatus();
+  buildPickerSnippet();
+}
+
+function saveSettings(){
+  CFG = {
+    owner: document.getElementById('cfgOwner').value.trim(),
+    repo: document.getElementById('cfgRepo').value.trim(),
+    branch: document.getElementById('cfgBranch').value.trim() || 'main',
+    plotsPath: document.getElementById('cfgPlotsPath').value.trim() || 'all_plots_matched.json',
+    xmlPath: document.getElementById('cfgXmlPath').value.trim() || 'gui_fov_kumaran.xml',
+    token: document.getElementById('cfgToken').value.trim()
+  };
+  localStorage.setItem('admin_gh_cfg', JSON.stringify(CFG));
+  notify('settingsNotice', 'ok', 'Saved. You can now use Load / Save on the Plots and Landmarks tabs.');
+  updateRepoStatus();
+}
+
+function clearSettings(){
+  localStorage.removeItem('admin_gh_cfg');
+  CFG = {};
+  document.getElementById('cfgToken').value = '';
+  updateRepoStatus();
+  notify('settingsNotice', 'info', 'Token cleared from this browser.');
+}
+
+function updateRepoStatus(){
+  var el = document.getElementById('repoStatus');
+  if (CFG.owner && CFG.repo && CFG.token) {
+    el.innerHTML = 'Connected to <b>' + CFG.owner + '/' + CFG.repo + '</b> (' + (CFG.branch || 'main') + ')';
+  } else {
+    el.innerHTML = 'Not connected — open <b>Settings</b> below';
+  }
+}
+
+function notify(elId, kind, msg){
+  var el = document.getElementById(elId);
+  el.innerHTML = '<div class="notice ' + kind + '">' + msg + '</div>';
+  if (kind === 'ok') setTimeout(function(){ if (el.firstChild) el.innerHTML=''; }, 4000);
+}
+
+/* =========================================================================
+   GITHUB CONTENTS API HELPERS
+   ========================================================================= */
+function b64DecodeUtf8(b64){
+  var bin = atob(b64.replace(/\n/g,''));
+  var bytes = new Uint8Array(bin.length);
+  for (var i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function b64EncodeUtf8(str){
+  var bytes = new TextEncoder().encode(str);
+  var bin = '';
+  bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+
+async function ghGet(path){
+  if (!CFG.owner || !CFG.repo || !CFG.token) throw new Error('Connect to GitHub in Settings first.');
+  var url = 'https://api.github.com/repos/' + CFG.owner + '/' + CFG.repo + '/contents/' + path + '?ref=' + encodeURIComponent(CFG.branch || 'main');
+  var res = await fetch(url, {
+    headers: { 'Authorization': 'token ' + CFG.token, 'Accept': 'application/vnd.github+json' }
+  });
+  if (!res.ok) throw new Error('GitHub GET ' + path + ' failed: ' + res.status + ' ' + (await res.text()).slice(0,200));
+  var data = await res.json();
+  return { text: b64DecodeUtf8(data.content), sha: data.sha };
+}
+
+async function ghPut(path, newText, sha, message){
+  var url = 'https://api.github.com/repos/' + CFG.owner + '/' + CFG.repo + '/contents/' + path;
+  var res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization': 'token ' + CFG.token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: message, content: b64EncodeUtf8(newText), sha: sha, branch: CFG.branch || 'main' })
+  });
+  if (!res.ok) throw new Error('GitHub PUT ' + path + ' failed: ' + res.status + ' ' + (await res.text()).slice(0,300));
+  return res.json();
+}
+
+/* =========================================================================
+   PLOTS
+   ========================================================================= */
+var PLOTS = {};          // hotspotName -> plot object (raw shape as in the JSON)
+var PLOTS_SHA = null;
+var dirtyKeys = {};
+var selectedKey = null;
+
+async function loadPlots(){
+  notify('plotsNotice', 'info', 'Loading…');
+  try{
+    var r = await ghGet(CFG.plotsPath);
+    PLOTS = JSON.parse(r.text);
+    PLOTS_SHA = r.sha;
+    dirtyKeys = {};
+    document.getElementById('plotsLoadedInfo').textContent = Object.keys(PLOTS).length + ' plots loaded.';
+    renderPlotList();
+    notify('plotsNotice', 'ok', 'Loaded ' + Object.keys(PLOTS).length + ' plots.');
+  }catch(e){
+    notify('plotsNotice', 'err', e.message);
+  }
+}
+
+// Hotspots that aren't sellable plots (road-buffer strips / park), same
+// mapping plot-popup.js uses on the live site for these same keys.
+var PLACEHOLDER_NAMES = { kml_poly_394: 'EB', kml_poly_395: 'LB', kml_poly_396: 'PARK', kml_poly_397: 'PARK' };
+
+// Friendly name for the admin list/edit form: a saved displayName always
+// wins; otherwise "kml_poly_N" becomes "Plot N+1" (hotspot index 0 is your
+// first plot, so it reads one higher than the raw key), falling back to
+// the known EB/LB/PARK labels for the non-sellable hotspots.
+function friendlyPlotName(key, plot){
+  if (plot && plot.displayName) return plot.displayName;
+  if (PLACEHOLDER_NAMES[key]) return PLACEHOLDER_NAMES[key];
+  var m = /(\d+)\s*$/.exec(key);
+  if (m) return 'Plot ' + (parseInt(m[1], 10) + 1);
+  return key;
+}
+
+function plotStatusOf(p){
+  var isWrapped = p && !Array.isArray(p) && Array.isArray(p.sides);
+  return isWrapped ? (p.status || 'AVAILABLE') : (p.status || 'AVAILABLE');
+}
+
+function renderPlotList(){
+  var q = (document.getElementById('plotSearch').value || '').toLowerCase();
+  var box = document.getElementById('plotList');
+  var keys = Object.keys(PLOTS).sort(function(a,b){
+    var na = parseInt((a.match(/(\d+)$/)||[])[1] || 0, 10);
+    var nb = parseInt((b.match(/(\d+)$/)||[])[1] || 0, 10);
+    return na - nb;
+  });
+  var filtered = keys.filter(function(k){
+    var p = PLOTS[k];
+    var name = friendlyPlotName(k, p);
+    return k.toLowerCase().indexOf(q) !== -1 || name.toLowerCase().indexOf(q) !== -1;
+  });
+  if (!filtered.length){ box.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:12px;">No matches.</div>'; return; }
+  box.innerHTML = filtered.map(function(k){
+    var p = PLOTS[k];
+    var status = (plotStatusOf(p) || 'AVAILABLE').toUpperCase();
+    var cls = status === 'SOLD' ? 'sold' : (status === 'HOLD' ? 'hold' : 'available');
+    var name = friendlyPlotName(k, p);
+    var dirty = dirtyKeys[k] ? '<span class="tag dirty">unsaved</span>' : '';
+    return '<div class="row-item' + (k===selectedKey?' sel':'') + '" onclick="selectPlot(\'' + k + '\')">' +
+      '<span>' + name + '</span>' +
+      '<span><span class="tag ' + cls + '">' + status + '</span>' + dirty + '</span></div>';
+  }).join('');
+}
+
+function normalizedSides(p){
+  // Returns [{letter, length, from, to}], accepting either the bare-array
+  // shape or the wrapped-object shape used elsewhere in this project.
+  var arr = Array.isArray(p) ? p : (p && Array.isArray(p.sides) ? p.sides : []);
+  return arr.map(function(s){ return { letter: s.side, length: s.length, from: s.from || null, to: s.to || null }; });
+}
+
+function selectPlot(key){
+  selectedKey = key;
+  renderPlotList();
+  var p = PLOTS[key];
+  document.getElementById('plotEmptyState').style.display = 'none';
+  document.getElementById('plotForm').style.display = 'block';
+  document.getElementById('pfKey').value = key;
+  document.getElementById('pfKey').readOnly = true;
+  document.getElementById('pfName').value = friendlyPlotName(key, p);
+  document.getElementById('pfStatus').value = (p && p.status) || 'AVAILABLE';
+  document.getElementById('pfCategory').value = (p && p.category) || 'TBD';
+  document.getElementById('pfFacing').value = (p && p.facing) || '';
+  document.getElementById('pfArea').value = (p && p.area) || '';
+  var sidesBox = document.getElementById('pfSides');
+  sidesBox.innerHTML = '';
+  normalizedSides(p).forEach(function(s){ addSideRow(s.letter, s.length, s.from, s.to); });
+  document.getElementById('plotSaveNotice').innerHTML = '';
+}
+
+function newPlot(){
+  selectedKey = null;
+  renderPlotList();
+  document.getElementById('plotEmptyState').style.display = 'none';
+  document.getElementById('plotForm').style.display = 'block';
+  document.getElementById('pfKey').value = '';
+  document.getElementById('pfKey').readOnly = false;
+  document.getElementById('pfName').value = '';
+  document.getElementById('pfStatus').value = 'AVAILABLE';
+  document.getElementById('pfCategory').value = 'TBD';
+  document.getElementById('pfFacing').value = '';
+  document.getElementById('pfArea').value = '';
+  document.getElementById('pfSides').innerHTML = '';
+  document.getElementById('plotSaveNotice').innerHTML =
+    '<div class="notice info">This plot\'s outline must already be traced in output_hotspots.xml (same hotspot key) for it to show up on the map — this form only sets its status/name/dimensions.</div>';
+}
+
+function addSideRow(letter, length, from, to){
+  letter = letter || '';
+  length = length || '';
+  var box = document.getElementById('pfSides');
+  var row = document.createElement('div');
+  row.className = 'sidegrid';
+  var coordNote = (from && to) ? 'traced' : 'no geometry yet';
+  row.innerHTML =
+    '<input type="text" class="mono side-letter" value="' + letter + '" maxlength="2" style="text-align:center;">' +
+    '<input type="text" class="side-length" value="' + length + '" placeholder="35\' 0&quot;">' +
+    '<span class="coord">' + coordNote + '</span>' +
+    '<button class="btn danger" style="padding:4px 8px;font-size:11px;" onclick="this.closest(\'.sidegrid\').remove()">Remove</button>';
+  row.dataset.from = from ? JSON.stringify(from) : '';
+  row.dataset.to = to ? JSON.stringify(to) : '';
+  box.appendChild(row);
+}
+
+function collectSidesFromForm(){
+  var rows = document.querySelectorAll('#pfSides .sidegrid');
+  var out = [];
+  rows.forEach(function(row){
+    var letter = row.querySelector('.side-letter').value.trim().toUpperCase();
+    var length = row.querySelector('.side-length').value.trim();
+    if (!letter || !length) return;
+    var side = { side: letter, length: length };
+    if (row.dataset.from) side.from = JSON.parse(row.dataset.from);
+    if (row.dataset.to) side.to = JSON.parse(row.dataset.to);
+    out.push(side);
+  });
+  return out;
+}
+
+function savePlotToGithub(){
+  return (async function(){
+    var key = document.getElementById('pfKey').value.trim();
+    if (!key){ notify('plotSaveNotice','err','Hotspot key is required (e.g. kml_poly_12).'); return; }
+    var sides = collectSidesFromForm();
+    var needsReview = sides.some(function(s){ return !s.from || !s.to; }) || sides.length === 0;
+    var entry = {
+      displayName: document.getElementById('pfName').value.trim() || undefined,
+      status: document.getElementById('pfStatus').value,
+      category: document.getElementById('pfCategory').value,
+      facing: document.getElementById('pfFacing').value || undefined,
+      area: document.getElementById('pfArea').value.trim() || undefined,
+      sides: sides,
+      sideOffsets: (PLOTS[key] && !Array.isArray(PLOTS[key]) && PLOTS[key].sideOffsets) || null,
+      needsReview: needsReview
+    };
+    Object.keys(entry).forEach(function(k){ if (entry[k] === undefined) delete entry[k]; });
+
+    PLOTS[key] = entry;
+    dirtyKeys[key] = true;
+    selectedKey = key;
+    renderPlotList();
+
+    try{
+      notify('plotSaveNotice','info','Saving to GitHub…');
+      var fresh = await ghGet(CFG.plotsPath);          // re-fetch sha right before writing
+      var freshData = JSON.parse(fresh.text);
+      freshData[key] = entry;                           // apply just this plot's change on top of latest data
+      var newText = JSON.stringify(freshData, null, 2);
+      await ghPut(CFG.plotsPath, newText, fresh.sha, 'Admin: update plot ' + key);
+      PLOTS = freshData;
+      delete dirtyKeys[key];
+      renderPlotList();
+      notify('plotSaveNotice','ok','Saved — live on GitHub.');
+    }catch(e){
+      notify('plotSaveNotice','err', e.message);
+    }
+  })();
+}
+
+function deletePlot(){
+  var key = document.getElementById('pfKey').value.trim();
+  if (!key || !PLOTS[key]) return;
+  if (!confirm('Remove all stored data for ' + key + '? Its outline on the map is untouched — only status/name/dimensions are removed.')) return;
+  (async function(){
+    try{
+      notify('plotSaveNotice','info','Deleting…');
+      var fresh = await ghGet(CFG.plotsPath);
+      var freshData = JSON.parse(fresh.text);
+      delete freshData[key];
+      await ghPut(CFG.plotsPath, JSON.stringify(freshData, null, 2), fresh.sha, 'Admin: remove plot data ' + key);
+      delete PLOTS[key];
+      selectedKey = null;
+      document.getElementById('plotForm').style.display = 'none';
+      document.getElementById('plotEmptyState').style.display = 'block';
+      renderPlotList();
+      notify('plotSaveNotice','ok','Removed.');
+    }catch(e){ notify('plotSaveNotice','err', e.message); }
+  })();
+}
+
+/* =========================================================================
+   LANDMARKS
+   ========================================================================= */
+var LANDMARKS = [];   // { slug, label, ath, height, time }
+var LM_XML_TEXT = null;
+var LM_SHA = null;
+
+// Accepts either a plain number ("-9.56583") or the picker's own output
+// style (ath="-9.56583" atv="38.92050", or just ath="-9.56583") pasted in
+// as-is — pulls out just the ath number and leaves that in the field.
+// Only rewrites the field when it actually spots an ath="..." pattern, so
+// normal typing of a plain number is left completely alone.
+function autoExtractAth(el){
+  var m = el.value.match(/ath\s*=\s*["']?(-?\d+(?:\.\d+)?)/i);
+  if (m) el.value = m[1];
+}
+
+function slugify(label){
+  return label.toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+function escXml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function loadLandmarks(){
+  notify('lmNotice','info','Loading…');
+  try{
+    var r = await ghGet(CFG.xmlPath);
+    LM_XML_TEXT = r.text;
+    LM_SHA = r.sha;
+    LANDMARKS = parseLandmarks(LM_XML_TEXT);
+    document.getElementById('lmLoadedInfo').textContent = LANDMARKS.length + ' landmarks loaded.';
+    renderLandmarkList();
+    notify('lmNotice','ok','Loaded ' + LANDMARKS.length + ' landmarks.');
+  }catch(e){
+    notify('lmNotice','err', e.message);
+  }
+}
+
+function parseLandmarks(xmlText){
+  var re = /landmark_define\(\s*([a-zA-Z0-9_]+)\s*,\s*'((?:[^'\\]|\\.)*)'\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*'((?:[^'\\]|\\.)*)'\s*\)\s*;/g;
+  var out = [];
+  var m;
+  while ((m = re.exec(xmlText)) !== null){
+    out.push({
+      slug: m[1],
+      label: m[2].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),
+      ath: parseFloat(m[3]),
+      height: parseFloat(m[4]),
+      time: m[5]
+    });
+  }
+  return out;
+}
+
+function renderLandmarkList(){
+  var box = document.getElementById('lmList');
+  if (!LANDMARKS.length){ box.innerHTML = '<div style="color:var(--muted);font-size:12px;">None yet.</div>'; return; }
+  box.innerHTML = LANDMARKS.map(function(lm, i){
+    return '<div class="lm-item">' +
+      '<div class="lm-top"><b>' + lm.label + '</b><span class="lm-slug mono">' + lm.slug + '</span></div>' +
+      '<div class="lm-meta">ath ' + lm.ath + ' &middot; height ' + lm.height + ' &middot; ' + (lm.time || 'no time flag') + '</div>' +
+      '<div class="lm-actions">' +
+      '<button class="btn danger" onclick="removeLandmark(' + i + ')">Remove</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function addLandmark(){
+  var label = document.getElementById('lmLabel').value.trim();
+  var time = document.getElementById('lmTime').value.trim();
+  var ath = parseFloat(document.getElementById('lmAth').value);
+  var height = parseFloat(document.getElementById('lmHeight').value) || 40;
+  if (!label || isNaN(ath)){ notify('lmSaveNotice','err','Label and ath are required.'); return; }
+  var slug = slugify(label);
+  var base = slug, n = 1;
+  while (LANDMARKS.some(function(l){ return l.slug === slug; })) { slug = base + '_' + (++n); }
+  LANDMARKS.push({ slug: slug, label: label, ath: ath, height: height, time: time });
+  renderLandmarkList();
+  document.getElementById('lmLabel').value = '';
+  document.getElementById('lmTime').value = '';
+  document.getElementById('lmAth').value = '';
+  notify('lmSaveNotice','info','Added locally — press "Save all to GitHub" to publish it.');
+}
+
+function removeLandmark(i){
+  LANDMARKS.splice(i,1);
+  renderLandmarkList();
+}
+
+// Rewrites just the landmark_define lines inside <action name="landmark_setup">
+// and the landmark_tick lines inside <action name="gui_master_tick">, leaving
+// every other line in those blocks (and the rest of the file) untouched.
+function regenerateActionBlock(xmlText, actionName, callName, newCalls){
+  var re = new RegExp('(<action name="' + actionName + '">)([\\s\\S]*?)(<\\/action>)');
+  return xmlText.replace(re, function(full, open, body, close){
+    var lines = body.split('\n');
+    var kept = [];
+    var insertAt = -1;
+    var callRe = new RegExp('^\\s*' + callName + '\\(');
+    lines.forEach(function(line){
+      if (callRe.test(line)) {
+        if (insertAt === -1) insertAt = kept.length;
+      } else {
+        kept.push(line);
+      }
+    });
+    if (insertAt === -1) insertAt = kept.length;
+    var indent = '\t\t';
+    var insertLines = newCalls.map(function(c){ return indent + c; });
+    var result = kept.slice(0, insertAt).concat(insertLines, kept.slice(insertAt));
+    return open + result.join('\n') + close;
+  });
+}
+
+function saveLandmarksToGithub(){
+  return (async function(){
+    try{
+      notify('lmSaveNotice','info','Saving to GitHub…');
+      var fresh = await ghGet(CFG.xmlPath);
+      var defineLines = LANDMARKS.map(function(lm){
+        return "landmark_define(" + lm.slug + ", '" + escXml(lm.label) + "', " + lm.ath + ", " + lm.height + ", '" + escXml(lm.time || '') + "');";
+      });
+      var tickLines = LANDMARKS.map(function(lm){ return 'landmark_tick(' + lm.slug + ');'; });
+
+      var updated = regenerateActionBlock(fresh.text, 'landmark_setup', 'landmark_define', defineLines);
+      updated = regenerateActionBlock(updated, 'gui_master_tick', 'landmark_tick', tickLines);
+
+      await ghPut(CFG.xmlPath, updated, fresh.sha, 'Admin: update landmarks (' + LANDMARKS.length + ' total)');
+      LM_XML_TEXT = updated;
+      notify('lmSaveNotice','ok','Saved — live on GitHub.');
+    }catch(e){
+      notify('lmSaveNotice','err', e.message);
+    }
+  })();
+}
+
+/* =========================================================================
+   COORDINATE PICKER SNIPPET (for the live tour page's console)
+   ========================================================================= */
+function buildPickerSnippet(){
+  var code =
+"(function(){\n" +
+"  document.addEventListener('click', function(e){\n" +
+"    if (!window.krpano) { console.warn('krpano not found on this page'); return; }\n" +
+"    var stage = document.querySelector('[id*=\"krpanoSWF\"]') || document.body;\n" +
+"    var r = stage.getBoundingClientRect();\n" +
+"    var x = e.clientX - r.left, y = e.clientY - r.top;\n" +
+"    krpano.call('screentosphere(' + x + ',' + y + ', tmp_ath, tmp_atv);');\n" +
+"    var ath = parseFloat(krpano.get('tmp_ath')).toFixed(5);\n" +
+"    var atv = parseFloat(krpano.get('tmp_atv')).toFixed(5);\n" +
+"    console.log('ath=' + ath + '  atv=' + atv);\n" +
+"    alert('ath = ' + ath + '\\natv = ' + atv);\n" +
+"  }, true);\n" +
+"  alert('Pick mode ON. Click anywhere on the tour. Reload the page to turn off.');\n" +
+"})();";
+  document.getElementById('pickerSnippet').textContent = code;
+}
+function copyPicker(){
+  navigator.clipboard.writeText(document.getElementById('pickerSnippet').textContent).then(function(){
+    alert('Copied. Paste it into the console on your live tour page.');
+  });
+}
+</script>
+</body>
+</html>
