@@ -209,6 +209,32 @@
       </div>
 
       <div class="card">
+        <h2>Firestore connection</h2>
+        <p class="hint">Create a Firebase project &rarr; Firestore Database &rarr; Create database, then
+          Project settings &rarr; Add app (Web) and paste the firebaseConfig values below. Plots are stored
+          one document per plot key in the <b>plots</b> collection. The config is kept in this browser's
+          local storage only; API keys in Firebase client configs are safe by design &mdash; access is
+          controlled by your Firestore security rules.</p>
+        <div class="row">
+          <div><label class="f">API key</label><input id="fsApiKey" type="text" placeholder="AIzaSy..."></div>
+          <div><label class="f">Auth domain</label><input id="fsAuthDomain" type="text" placeholder="your-app.firebaseapp.com"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">Project ID</label><input id="fsProjectId" type="text" placeholder="your-project-id"></div>
+          <div><label class="f">Storage bucket</label><input id="fsStorageBucket" type="text" placeholder="your-app.appspot.com"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">Messaging sender ID</label><input id="fsSenderId" type="text" placeholder="1234567890"></div>
+          <div><label class="f">App ID</label><input id="fsAppId" type="text" placeholder="1:123...:web:abc..."></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" onclick="saveFsSettings()">Save Firestore connection</button>
+          <button class="btn danger" onclick="clearFsSettings()">Clear saved config</button>
+        </div>
+        <div id="fsSettingsNotice"></div>
+      </div>
+
+      <div class="card">
         <h2>Change password</h2>
         <p class="hint">Changes the password for whichever username you're currently signed in as — it only
           gates this page in <b>this specific browser</b>, it's a light deterrent, not real security (the GitHub
@@ -235,6 +261,7 @@
       <div class="card">
         <div class="btnrow" style="margin-top:0;">
           <button class="btn primary" onclick="loadPlots()">Load plots from GitHub</button>
+          <button class="btn" onclick="loadPlotsFromFirestore()">Load from Firestore</button>
           <button class="btn" onclick="newPlot()">+ Add new plot</button>
           <span id="plotsLoadedInfo" class="hint" style="align-self:center;margin:0;"></span>
         </div>
@@ -307,6 +334,7 @@
 
             <div class="btnrow">
               <button class="btn amber" onclick="savePlotToGithub()">Save to GitHub</button>
+              <button class="btn amber" onclick="savePlotToFirestore()">Save to Firestore</button>
               <button class="btn danger" onclick="deletePlot()">Delete this plot's data</button>
             </div>
             <div id="plotSaveNotice"></div>
@@ -320,6 +348,7 @@
       <div class="card">
         <div class="btnrow" style="margin-top:0;">
           <button class="btn primary" onclick="loadLandmarks()">Load landmarks from GitHub</button>
+          <button class="btn" onclick="loadLandmarksFromFirestore()">Load from Firestore</button>
           <span id="lmLoadedInfo" class="hint" style="align-self:center;margin:0;"></span>
         </div>
         <div id="lmNotice"></div>
@@ -358,6 +387,7 @@
         <div id="lmList"><div style="color:var(--muted);font-size:12px;">Load landmarks to see the list.</div></div>
         <div class="btnrow">
           <button class="btn amber" onclick="saveLandmarksToGithub()">Save all to GitHub</button>
+          <button class="btn amber" onclick="saveLandmarksToFirestore()">Save all to Firestore</button>
         </div>
         <div id="lmSaveNotice"></div>
       </div>
@@ -365,6 +395,9 @@
 
   </main>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 /* =========================================================================
@@ -518,6 +551,14 @@ function initApp(){
   document.getElementById('cfgXmlPath').value = CFG.xmlPath || 'gui_fov_kumaran.xml';
   document.getElementById('cfgToken').value = CFG.token || '';
   updateRepoStatus();
+  var fsSaved = localStorage.getItem('admin_fs_cfg');
+  if (fsSaved) { try { FS.cfg = JSON.parse(fsSaved); } catch(e){ FS.cfg = {}; } }
+  document.getElementById('fsApiKey').value = FS.cfg.apiKey || '';
+  document.getElementById('fsAuthDomain').value = FS.cfg.authDomain || '';
+  document.getElementById('fsProjectId').value = FS.cfg.projectId || '';
+  document.getElementById('fsStorageBucket').value = FS.cfg.storageBucket || '';
+  document.getElementById('fsSenderId').value = FS.cfg.messagingSenderId || '';
+  document.getElementById('fsAppId').value = FS.cfg.appId || '';
   buildPickerSnippet();
 }
 
@@ -594,6 +635,124 @@ async function ghPut(path, newText, sha, message){
   });
   if (!res.ok) throw new Error('GitHub PUT ' + path + ' failed: ' + res.status + ' ' + (await res.text()).slice(0,300));
   return res.json();
+}
+
+/* =========================================================================
+   FIRESTORE  (Firebase v9 compat SDK)
+   ========================================================================= */
+var FS = { db: null, cfg: {} };
+
+function saveFsSettings(){
+  FS.cfg = {
+    apiKey: document.getElementById('fsApiKey').value.trim(),
+    authDomain: document.getElementById('fsAuthDomain').value.trim(),
+    projectId: document.getElementById('fsProjectId').value.trim(),
+    storageBucket: document.getElementById('fsStorageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fsSenderId').value.trim(),
+    appId: document.getElementById('fsAppId').value.trim()
+  };
+  FS.db = null; // reconnect with new config on next use
+  localStorage.setItem('admin_fs_cfg', JSON.stringify(FS.cfg));
+  notify('fsSettingsNotice', 'ok', 'Saved. The Firestore buttons are now live.');
+}
+
+function clearFsSettings(){
+  localStorage.removeItem('admin_fs_cfg');
+  FS.cfg = {}; FS.db = null;
+  notify('fsSettingsNotice', 'info', 'Firestore config cleared from this browser.');
+}
+
+function ensureFirestore(){
+  if (FS.db) return FS.db;
+  if (!FS.cfg.apiKey || !FS.cfg.projectId || !FS.cfg.appId)
+    throw new Error('Connect Firestore in Settings first (need at least API key, Project ID, App ID).');
+  if (!window.firebase) throw new Error('Firebase SDK failed to load — check your internet connection.');
+  if (!firebase.apps.length) firebase.initializeApp(FS.cfg);
+  FS.db = firebase.firestore();
+  return FS.db;
+}
+
+function collectPlotEntryFromForm(){
+  var key = document.getElementById('pfKey').value.trim();
+  if (!key) throw new Error('Hotspot key is required (e.g. kml_poly_12).');
+  var sides = collectSidesFromForm();
+  var entry = {
+    displayName: document.getElementById('pfName').value.trim() || null,
+    status: document.getElementById('pfStatus').value,
+    category: document.getElementById('pfCategory').value,
+    facing: document.getElementById('pfFacing').value || null,
+    area: document.getElementById('pfArea').value.trim() || null,
+    sides: sides,
+    sideOffsets: (PLOTS[key] && !Array.isArray(PLOTS[key]) && PLOTS[key].sideOffsets) || null,
+    needsReview: sides.some(function(s){ return !s.from || !s.to; }) || sides.length === 0
+  };
+  Object.keys(entry).forEach(function(k){ if (entry[k] === null) delete entry[k]; });
+  return { key: key, entry: entry };
+}
+
+async function savePlotToFirestore(){
+  try{
+    notify('plotSaveNotice','info','Saving to Firestore…');
+    var data = collectPlotEntryFromForm();
+    var db = ensureFirestore();
+    await db.collection('plots').doc(data.key).set(Object.assign({}, data.entry, {
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }));
+    PLOTS[data.key] = data.entry;
+    selectedKey = data.key;
+    renderPlotList();
+    notify('plotSaveNotice','ok','Saved to Firestore (' + data.key + ').');
+  }catch(e){
+    notify('plotSaveNotice','err', e.message);
+  }
+}
+
+async function loadPlotsFromFirestore(){
+  notify('plotsNotice','info','Loading from Firestore…');
+  try{
+    var db = ensureFirestore();
+    var snap = await db.collection('plots').get();
+    snap.forEach(function(doc){
+      var d = doc.data();
+      delete d.updatedAt;
+      PLOTS[doc.id] = d;
+    });
+    dirtyKeys = {};
+    document.getElementById('plotsLoadedInfo').textContent = Object.keys(PLOTS).length + ' plots loaded.';
+    renderPlotList();
+    notify('plotsNotice','ok','Loaded ' + snap.size + ' plots from Firestore.');
+  }catch(e){
+    notify('plotsNotice','err', e.message);
+  }
+}
+
+async function saveLandmarksToFirestore(){
+  try{
+    notify('lmSaveNotice','info','Saving landmarks to Firestore…');
+    var db = ensureFirestore();
+    await db.collection('landmarks').doc('config').set({
+      items: LANDMARKS,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    notify('lmSaveNotice','ok','Saved ' + LANDMARKS.length + ' landmarks to Firestore.');
+  }catch(e){
+    notify('lmSaveNotice','err', e.message);
+  }
+}
+
+async function loadLandmarksFromFirestore(){
+  notify('lmNotice','info','Loading landmarks from Firestore…');
+  try{
+    var db = ensureFirestore();
+    var doc = await db.collection('landmarks').doc('config').get();
+    if (!doc.exists) throw new Error('No landmarks/config document found in Firestore.');
+    LANDMARKS = doc.data().items || [];
+    document.getElementById('lmLoadedInfo').textContent = LANDMARKS.length + ' landmarks loaded.';
+    renderLandmarkList();
+    notify('lmNotice','ok','Loaded ' + LANDMARKS.length + ' landmarks from Firestore.');
+  }catch(e){
+    notify('lmNotice','err', e.message);
+  }
 }
 
 /* =========================================================================
