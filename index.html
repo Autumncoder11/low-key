@@ -262,6 +262,7 @@
         <div class="btnrow" style="margin-top:0;">
           <button class="btn primary" onclick="loadPlots()">Load plots from GitHub</button>
           <button class="btn" onclick="loadPlotsFromFirestore()">Load from Firestore</button>
+          <button class="btn amber" onclick="pushAllPlotsToFirestore()">Push all plots to Firestore</button>
           <button class="btn" onclick="newPlot()">+ Add new plot</button>
           <span id="plotsLoadedInfo" class="hint" style="align-self:center;margin:0;"></span>
         </div>
@@ -690,6 +691,20 @@ function collectPlotEntryFromForm(){
   return { key: key, entry: entry };
 }
 
+// The public tour reads this one tiny doc on every visit and only re-reads the
+// whole plots collection when it changes. Call after any write to "plots".
+// Returns an error message string, or null on success.
+async function bumpPlotsVersion(db){
+  try{
+    await db.collection('meta').doc('plots').set({
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return null;
+  }catch(e){
+    return e.message;
+  }
+}
+
 async function savePlotToFirestore(){
   try{
     notify('plotSaveNotice','info','Saving to Firestore…');
@@ -698,10 +713,12 @@ async function savePlotToFirestore(){
     await db.collection('plots').doc(data.key).set(Object.assign({}, data.entry, {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }));
+    var vErr = await bumpPlotsVersion(db);
     PLOTS[data.key] = data.entry;
     selectedKey = data.key;
     renderPlotList();
-    notify('plotSaveNotice','ok','Saved to Firestore (' + data.key + ').');
+    if (vErr) notify('plotSaveNotice','err','Saved ' + data.key + ', but the website may not refresh right away: could not update the version marker (' + vErr + '). Add a rule for the "meta" collection.');
+    else notify('plotSaveNotice','ok','Saved to Firestore (' + data.key + ').');
   }catch(e){
     notify('plotSaveNotice','err', e.message);
   }
@@ -721,6 +738,39 @@ async function loadPlotsFromFirestore(){
     document.getElementById('plotsLoadedInfo').textContent = Object.keys(PLOTS).length + ' plots loaded.';
     renderPlotList();
     notify('plotsNotice','ok','Loaded ' + snap.size + ' plots from Firestore.');
+  }catch(e){
+    notify('plotsNotice','err', e.message);
+  }
+}
+
+async function pushAllPlotsToFirestore(){
+  var keys = Object.keys(PLOTS);
+  if (!keys.length){
+    notify('plotsNotice','err','No plots in memory. Click "Load plots from GitHub" first.');
+    return;
+  }
+  if (!confirm('Write ' + keys.length + ' plots to the Firestore "plots" collection? Existing documents with the same keys will be overwritten.')) return;
+  try{
+    var db = ensureFirestore();
+    var done = 0;
+    for (var i = 0; i < keys.length; i += 400){   // batches are limited to 500 writes
+      var batch = db.batch();
+      keys.slice(i, i + 400).forEach(function(k){
+        var p = PLOTS[k];
+        // Firestore documents must be objects, so legacy plots stored as a bare
+        // array of sides are wrapped into the { sides: [...] } shape.
+        var data = Array.isArray(p) ? { sides: p } : Object.assign({}, p);
+        data = JSON.parse(JSON.stringify(data));   // drops undefined values Firestore rejects
+        data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        batch.set(db.collection('plots').doc(k), data);
+      });
+      await batch.commit();
+      done = Math.min(i + 400, keys.length);
+      notify('plotsNotice','info','Pushed ' + done + ' / ' + keys.length + ' plots…');
+    }
+    var vErr2 = await bumpPlotsVersion(db);
+    if (vErr2) notify('plotsNotice','err','Pushed ' + keys.length + ' plots, but the website may not refresh right away: could not update the version marker (' + vErr2 + '). Add a rule for the "meta" collection.');
+    else notify('plotsNotice','ok','Pushed ' + keys.length + ' plots to Firestore.');
   }catch(e){
     notify('plotsNotice','err', e.message);
   }
