@@ -19,6 +19,7 @@
     --good:#2F7D57;
     --bad:#B4432E;
     --hold:#B08A1A;
+    --booked:#4B3FA0;
     --radius:3px;
     font-family:'IBM Plex Sans',system-ui,sans-serif;
   }
@@ -115,6 +116,7 @@
   .tag.sold{background:#F6DCD4;color:var(--bad);}
   .tag.available{background:#DCEEE2;color:var(--good);}
   .tag.hold{background:#F3E7C4;color:var(--hold);}
+  .tag.booked{background:#E3E1F6;color:var(--booked);}
   .tag.dirty{background:#DCE7F2;color:#2B5A85;margin-left:6px;}
 
   .sidegrid{display:grid;grid-template-columns:56px 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;}
@@ -266,6 +268,7 @@
                   <option value="AVAILABLE">Available</option>
                   <option value="SOLD">Sold</option>
                   <option value="HOLD">On hold</option>
+                  <option value="BOOKED">Booked</option>
                 </select>
               </div>
               <div>
@@ -654,7 +657,7 @@ function renderPlotList(){
   box.innerHTML = filtered.map(function(k){
     var p = PLOTS[k];
     var status = (plotStatusOf(p) || 'AVAILABLE').toUpperCase();
-    var cls = status === 'SOLD' ? 'sold' : (status === 'HOLD' ? 'hold' : 'available');
+    var cls = status === 'SOLD' ? 'sold' : (status === 'HOLD' ? 'hold' : (status === 'BOOKED' ? 'booked' : 'available'));
     var name = friendlyPlotName(k, p);
     var dirty = dirtyKeys[k] ? '<span class="tag dirty">unsaved</span>' : '';
     return '<div class="row-item' + (k===selectedKey?' sel':'') + '" onclick="selectPlot(\'' + k + '\')">' +
