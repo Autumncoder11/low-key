@@ -1,0 +1,598 @@
+{
+  "polys": {
+    "kml_poly_101": {
+      "facing": "East"
+    },
+    "kml_poly_102": {
+      "facing": "East"
+    },
+    "kml_poly_103": {
+      "facing": "East"
+    },
+    "kml_poly_104": {
+      "facing": "East"
+    },
+    "kml_poly_105": {
+      "facing": "East"
+    },
+    "kml_poly_106": {
+      "facing": "East"
+    },
+    "kml_poly_107": {
+      "facing": "East"
+    },
+    "kml_poly_108": {
+      "facing": "East"
+    },
+    "kml_poly_109": {
+      "facing": "East"
+    },
+    "kml_poly_112": {
+      "facing": "West"
+    },
+    "kml_poly_113": {
+      "facing": "West"
+    },
+    "kml_poly_114": {
+      "facing": "West"
+    },
+    "kml_poly_115": {
+      "facing": "West"
+    },
+    "kml_poly_116": {
+      "facing": "West"
+    },
+    "kml_poly_117": {
+      "facing": "West"
+    },
+    "kml_poly_118": {
+      "facing": "West"
+    },
+    "kml_poly_119": {
+      "facing": "West"
+    },
+    "kml_poly_120": {
+      "facing": "West"
+    },
+    "kml_poly_126": {
+      "facing": "West"
+    },
+    "kml_poly_127": {
+      "facing": "West"
+    },
+    "kml_poly_128": {
+      "facing": "West"
+    },
+    "kml_poly_129": {
+      "facing": "West"
+    },
+    "kml_poly_130": {
+      "facing": "West"
+    },
+    "kml_poly_131": {
+      "facing": "West"
+    },
+    "kml_poly_132": {
+      "facing": "West"
+    },
+    "kml_poly_133": {
+      "facing": "West"
+    },
+    "kml_poly_134": {
+      "facing": "West"
+    },
+    "kml_poly_135": {
+      "facing": "West"
+    },
+    "kml_poly_138": {
+      "facing": "East"
+    },
+    "kml_poly_139": {
+      "facing": "East"
+    },
+    "kml_poly_140": {
+      "facing": "East"
+    },
+    "kml_poly_141": {
+      "facing": "East"
+    },
+    "kml_poly_142": {
+      "facing": "East"
+    },
+    "kml_poly_143": {
+      "facing": "East"
+    },
+    "kml_poly_144": {
+      "facing": "East"
+    },
+    "kml_poly_145": {
+      "facing": "East"
+    },
+    "kml_poly_146": {
+      "facing": "East"
+    },
+    "kml_poly_147": {
+      "facing": "East"
+    },
+    "kml_poly_153": {
+      "facing": "North West"
+    },
+    "kml_poly_154": {
+      "facing": "West"
+    },
+    "kml_poly_155": {
+      "facing": "West"
+    },
+    "kml_poly_156": {
+      "facing": "West"
+    },
+    "kml_poly_157": {
+      "facing": "West"
+    },
+    "kml_poly_158": {
+      "facing": "West"
+    },
+    "kml_poly_159": {
+      "facing": "West"
+    },
+    "kml_poly_160": {
+      "facing": "West"
+    },
+    "kml_poly_161": {
+      "facing": "West"
+    },
+    "kml_poly_162": {
+      "facing": "West"
+    },
+    "kml_poly_165": {
+      "facing": "East"
+    },
+    "kml_poly_166": {
+      "facing": "East"
+    },
+    "kml_poly_167": {
+      "facing": "East"
+    },
+    "kml_poly_168": {
+      "facing": "East"
+    },
+    "kml_poly_169": {
+      "facing": "East"
+    },
+    "kml_poly_170": {
+      "facing": "East"
+    },
+    "kml_poly_171": {
+      "facing": "East"
+    },
+    "kml_poly_172": {
+      "facing": "South East"
+    },
+    "kml_poly_173": {
+      "facing": "South East"
+    },
+    "kml_poly_174": {
+      "facing": "South East"
+    },
+    "kml_poly_180": {
+      "facing": "North West"
+    },
+    "kml_poly_181": {
+      "facing": "North West"
+    },
+    "kml_poly_182": {
+      "facing": "North West"
+    },
+    "kml_poly_183": {
+      "facing": "North West"
+    },
+    "kml_poly_184": {
+      "facing": "North West"
+    },
+    "kml_poly_185": {
+      "facing": "North West"
+    },
+    "kml_poly_186": {
+      "facing": "West"
+    },
+    "kml_poly_187": {
+      "facing": "West"
+    },
+    "kml_poly_188": {
+      "facing": "West"
+    },
+    "kml_poly_189": {
+      "facing": "West"
+    },
+    "kml_poly_192": {
+      "facing": "East"
+    },
+    "kml_poly_193": {
+      "facing": "East"
+    },
+    "kml_poly_194": {
+      "facing": "East"
+    },
+    "kml_poly_195": {
+      "facing": "South East"
+    },
+    "kml_poly_196": {
+      "facing": "South East"
+    },
+    "kml_poly_197": {
+      "facing": "South East"
+    },
+    "kml_poly_198": {
+      "facing": "South East"
+    },
+    "kml_poly_199": {
+      "facing": "South East"
+    },
+    "kml_poly_200": {
+      "facing": "South East"
+    },
+    "kml_poly_201": {
+      "facing": "South East"
+    },
+    "kml_poly_235": {
+      "facing": "East"
+    },
+    "kml_poly_236": {
+      "facing": "East"
+    },
+    "kml_poly_237": {
+      "facing": "East"
+    },
+    "kml_poly_238": {
+      "facing": "East"
+    },
+    "kml_poly_239": {
+      "facing": "East"
+    },
+    "kml_poly_240": {
+      "facing": "East"
+    },
+    "kml_poly_241": {
+      "facing": "East"
+    },
+    "kml_poly_242": {
+      "facing": "East"
+    },
+    "kml_poly_243": {
+      "facing": "North East"
+    },
+    "kml_poly_244": {
+      "facing": "East"
+    },
+    "kml_poly_245": {
+      "facing": "East"
+    },
+    "kml_poly_246": {
+      "facing": "West"
+    },
+    "kml_poly_268": {
+      "facing": "South East"
+    },
+    "kml_poly_269": {
+      "facing": "South East"
+    },
+    "kml_poly_270": {
+      "facing": "South"
+    },
+    "kml_poly_271": {
+      "facing": "South West"
+    },
+    "kml_poly_272": {
+      "facing": "South West"
+    },
+    "kml_poly_273": {
+      "facing": "South West"
+    },
+    "kml_poly_274": {
+      "facing": "South West"
+    },
+    "kml_poly_275": {
+      "facing": "South West"
+    },
+    "kml_poly_276": {
+      "facing": "West"
+    },
+    "kml_poly_277": {
+      "facing": "West"
+    },
+    "kml_poly_278": {
+      "facing": "West"
+    },
+    "kml_poly_279": {
+      "facing": "West"
+    },
+    "kml_poly_282": {
+      "facing": "North East"
+    },
+    "kml_poly_283": {
+      "facing": "North East"
+    },
+    "kml_poly_284": {
+      "facing": "North East"
+    },
+    "kml_poly_285": {
+      "facing": "North East"
+    },
+    "kml_poly_286": {
+      "facing": "North East"
+    },
+    "kml_poly_287": {
+      "facing": "North East"
+    },
+    "kml_poly_288": {
+      "facing": "North East"
+    },
+    "kml_poly_289": {
+      "facing": "North East"
+    },
+    "kml_poly_290": {
+      "facing": "North"
+    },
+    "kml_poly_291": {
+      "facing": "North"
+    },
+    "kml_poly_292": {
+      "facing": "North West"
+    },
+    "kml_poly_298": {
+      "facing": "South East"
+    },
+    "kml_poly_299": {
+      "facing": "South"
+    },
+    "kml_poly_300": {
+      "facing": "South"
+    },
+    "kml_poly_301": {
+      "facing": "South"
+    },
+    "kml_poly_302": {
+      "facing": "South West"
+    },
+    "kml_poly_303": {
+      "facing": "South West"
+    },
+    "kml_poly_304": {
+      "facing": "South West"
+    },
+    "kml_poly_305": {
+      "facing": "South West"
+    },
+    "kml_poly_306": {
+      "facing": "South West"
+    },
+    "kml_poly_307": {
+      "facing": "South West"
+    },
+    "kml_poly_308": {
+      "facing": "South West"
+    },
+    "kml_poly_31": {
+      "facing": "South West"
+    },
+    "kml_poly_32": {
+      "facing": "South West"
+    },
+    "kml_poly_33": {
+      "facing": "South West"
+    },
+    "kml_poly_338": {
+      "facing": "West"
+    },
+    "kml_poly_339": {
+      "facing": "West"
+    },
+    "kml_poly_34": {
+      "facing": "South West"
+    },
+    "kml_poly_340": {
+      "facing": "West"
+    },
+    "kml_poly_341": {
+      "facing": "West"
+    },
+    "kml_poly_342": {
+      "facing": "West"
+    },
+    "kml_poly_343": {
+      "facing": "West"
+    },
+    "kml_poly_344": {
+      "facing": "West"
+    },
+    "kml_poly_345": {
+      "facing": "North West"
+    },
+    "kml_poly_346": {
+      "facing": "North West"
+    },
+    "kml_poly_347": {
+      "facing": "North West"
+    },
+    "kml_poly_348": {
+      "facing": "North West"
+    },
+    "kml_poly_349": {
+      "facing": "North West"
+    },
+    "kml_poly_35": {
+      "facing": "South West"
+    },
+    "kml_poly_350": {
+      "facing": "North West"
+    },
+    "kml_poly_355": {
+      "facing": "South East"
+    },
+    "kml_poly_356": {
+      "facing": "South East"
+    },
+    "kml_poly_357": {
+      "facing": "South East"
+    },
+    "kml_poly_358": {
+      "facing": "South East"
+    },
+    "kml_poly_359": {
+      "facing": "South East"
+    },
+    "kml_poly_36": {
+      "facing": "South West"
+    },
+    "kml_poly_360": {
+      "facing": "South East"
+    },
+    "kml_poly_361": {
+      "facing": "South East"
+    },
+    "kml_poly_362": {
+      "facing": "South East"
+    },
+    "kml_poly_363": {
+      "facing": "East"
+    },
+    "kml_poly_364": {
+      "facing": "East"
+    },
+    "kml_poly_365": {
+      "facing": "East"
+    },
+    "kml_poly_366": {
+      "facing": "East"
+    },
+    "kml_poly_367": {
+      "facing": "East"
+    },
+    "kml_poly_37": {
+      "facing": "South West"
+    },
+    "kml_poly_38": {
+      "facing": "South West"
+    },
+    "kml_poly_44": {
+      "facing": "East"
+    },
+    "kml_poly_45": {
+      "facing": "East"
+    },
+    "kml_poly_46": {
+      "facing": "North East"
+    },
+    "kml_poly_47": {
+      "facing": "North East"
+    },
+    "kml_poly_48": {
+      "facing": "North East"
+    },
+    "kml_poly_49": {
+      "facing": "North East"
+    },
+    "kml_poly_50": {
+      "facing": "North East"
+    },
+    "kml_poly_51": {
+      "facing": "North East"
+    },
+    "kml_poly_54": {
+      "facing": "South West"
+    },
+    "kml_poly_55": {
+      "facing": "South West"
+    },
+    "kml_poly_56": {
+      "facing": "South West"
+    },
+    "kml_poly_57": {
+      "facing": "West"
+    },
+    "kml_poly_58": {
+      "facing": "West"
+    },
+    "kml_poly_59": {
+      "facing": "West"
+    },
+    "kml_poly_60": {
+      "facing": "West"
+    },
+    "kml_poly_61": {
+      "facing": "West"
+    },
+    "kml_poly_67": {
+      "facing": "East"
+    },
+    "kml_poly_68": {
+      "facing": "East"
+    },
+    "kml_poly_69": {
+      "facing": "East"
+    },
+    "kml_poly_70": {
+      "facing": "East"
+    },
+    "kml_poly_71": {
+      "facing": "East"
+    },
+    "kml_poly_72": {
+      "facing": "East"
+    },
+    "kml_poly_73": {
+      "facing": "East"
+    },
+    "kml_poly_74": {
+      "facing": "East"
+    },
+    "kml_poly_77": {
+      "facing": "West"
+    },
+    "kml_poly_78": {
+      "facing": "West"
+    },
+    "kml_poly_79": {
+      "facing": "West"
+    },
+    "kml_poly_80": {
+      "facing": "West"
+    },
+    "kml_poly_81": {
+      "facing": "West"
+    },
+    "kml_poly_82": {
+      "facing": "West"
+    },
+    "kml_poly_83": {
+      "facing": "West"
+    },
+    "kml_poly_84": {
+      "facing": "West"
+    },
+    "kml_poly_90": {
+      "facing": "East"
+    },
+    "kml_poly_91": {
+      "facing": "East"
+    },
+    "kml_poly_92": {
+      "facing": "East"
+    },
+    "kml_poly_93": {
+      "facing": "East"
+    },
+    "kml_poly_94": {
+      "facing": "East"
+    },
+    "kml_poly_95": {
+      "facing": "East"
+    },
+    "kml_poly_96": {
+      "facing": "East"
+    },
+    "kml_poly_97": {
+      "facing": "East"
+    }
+  }
+}
