@@ -679,6 +679,14 @@
                   <label class="f">Area (leave blank to auto-estimate from sides)</label>
                   <input id="pfArea" type="text" placeholder="e.g. 2,400 sq ft">
                 </div>
+                <div>
+                  <label class="f">Cent</label>
+                  <input id="pfCent" type="number" step="1" placeholder="e.g. 5">
+                </div>
+                <div>
+                  <label class="f">Sqft</label>
+                  <input id="pfSqft" type="number" step="1" placeholder="e.g. 2400">
+                </div>
               </div>
 
               <label class="f" style="margin-top:6px;">Side dimensions</label>
@@ -1000,8 +1008,17 @@
        CLEARABLE_FIELDS are the form fields that may legitimately be emptied
        (blank Display name / Facing / Area) — only those are deleted when blank.
        ========================================================================= */
-    var FORM_FIELDS = ['displayName', 'status', 'category', 'facing', 'area', 'sides', 'needsReview'];
-    var CLEARABLE_FIELDS = ['displayName', 'facing', 'area'];
+    var FORM_FIELDS = ['displayName', 'status', 'category', 'facing', 'area', 'cent', 'sqft', 'sides', 'needsReview'];
+    var CLEARABLE_FIELDS = ['displayName', 'facing', 'area', 'cent', 'sqft'];
+
+    // Reads an integer-only field (cent, sqft). Returns a whole number, or
+    // null if the box is blank/not a valid integer — never a string.
+    function readIntField(id) {
+      var raw = document.getElementById(id).value.trim();
+      if (raw === '') return null;
+      var n = parseInt(raw, 10);
+      return isNaN(n) ? null : n;
+    }
 
     // Returns a copy of `entry` plus every non-form field found on `oldPlot`.
     function keepExtras(oldPlot, entry) {
@@ -1059,6 +1076,8 @@
         category: document.getElementById('pfCategory').value,
         facing: document.getElementById('pfFacing').value || null,
         area: document.getElementById('pfArea').value.trim() || null,
+        cent: readIntField('pfCent'),
+        sqft: readIntField('pfSqft'),
         sides: sides,
         sideOffsets: (PLOTS[key] && !Array.isArray(PLOTS[key]) && PLOTS[key].sideOffsets) || null,
         needsReview: sides.some(function (s) { return !s.from || !s.to; }) || sides.length === 0
@@ -1279,6 +1298,8 @@
       document.getElementById('pfCategory').value = (p && p.category) || 'TBD';
       document.getElementById('pfFacing').value = (p && p.facing) || '';
       document.getElementById('pfArea').value = (p && p.area) || '';
+      document.getElementById('pfCent').value = (p && typeof p.cent === 'number') ? p.cent : '';
+      document.getElementById('pfSqft').value = (p && typeof p.sqft === 'number') ? p.sqft : '';
       var sidesBox = document.getElementById('pfSides');
       sidesBox.innerHTML = '';
       normalizedSides(p).forEach(function (s) { addSideRow(s.letter, s.length, s.from, s.to); });
@@ -1297,6 +1318,8 @@
       document.getElementById('pfCategory').value = 'TBD';
       document.getElementById('pfFacing').value = '';
       document.getElementById('pfArea').value = '';
+      document.getElementById('pfCent').value = '';
+      document.getElementById('pfSqft').value = '';
       document.getElementById('pfSides').innerHTML = '';
       document.getElementById('plotSaveNotice').innerHTML =
         '<div class="notice info">This plot\'s outline must already be traced in output_hotspots.xml (same hotspot key) for it to show up on the map — this form only sets its status/name/dimensions.</div>';
@@ -1340,12 +1363,16 @@
         if (!key) { notify('plotSaveNotice', 'err', 'Hotspot key is required (e.g. kml_poly_12).'); return; }
         var sides = collectSidesFromForm();
         var needsReview = sides.some(function (s) { return !s.from || !s.to; }) || sides.length === 0;
+        var centVal = readIntField('pfCent');
+        var sqftVal = readIntField('pfSqft');
         var entry = {
           displayName: document.getElementById('pfName').value.trim() || undefined,
           status: document.getElementById('pfStatus').value,
           category: document.getElementById('pfCategory').value,
           facing: document.getElementById('pfFacing').value || undefined,
           area: document.getElementById('pfArea').value.trim() || undefined,
+          cent: centVal === null ? undefined : centVal,
+          sqft: sqftVal === null ? undefined : sqftVal,
           sides: sides,
           needsReview: needsReview
         };
